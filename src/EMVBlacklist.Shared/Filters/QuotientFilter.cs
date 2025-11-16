@@ -117,7 +117,8 @@ public class QuotientFilter : IBlacklistFilter
 
     private (int quotient, uint remainder) Hash(string pan)
     {
-        var hash = XxHash64.Hash(Encoding.UTF8.GetBytes(pan));
+        var hashBytes = XxHash64.Hash(Encoding.UTF8.GetBytes(pan));
+        var hash = BitConverter.ToUInt64(hashBytes, 0);
         var quotient = (int)(hash >> _remainderBits) & ((_numSlots - 1));
         var remainder = (uint)(hash & ((1UL << _remainderBits) - 1));
 

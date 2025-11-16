@@ -169,8 +169,8 @@ public class CuckooFilter : IBlacklistFilter
 
     private (int index, byte[] fingerprint) Hash(string pan)
     {
-        var hash = XxHash64.Hash(Encoding.UTF8.GetBytes(pan));
-        var hashBytes = BitConverter.GetBytes(hash);
+        var hashBytes = XxHash64.Hash(Encoding.UTF8.GetBytes(pan));
+        var hash = BitConverter.ToUInt64(hashBytes, 0);
 
         var index = (int)(hash % (uint)_numBuckets);
         var fingerprint = new byte[_fingerprintSize];
@@ -191,7 +191,8 @@ public class CuckooFilter : IBlacklistFilter
 
     private int AlternateIndex(int index, byte[] fingerprint)
     {
-        var fpHash = XxHash32.Hash(fingerprint);
+        var fpHashBytes = XxHash32.Hash(fingerprint);
+        var fpHash = BitConverter.ToUInt32(fpHashBytes, 0);
         return (int)((index ^ fpHash) % (uint)_numBuckets);
     }
 

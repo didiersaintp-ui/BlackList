@@ -93,7 +93,8 @@ public class HashTableGolombFilter : IBlacklistFilter
 
     private ulong ComputeHash(string pan)
     {
-        return XxHash64.Hash(Encoding.UTF8.GetBytes(pan));
+        var hashBytes = XxHash64.Hash(Encoding.UTF8.GetBytes(pan));
+        return BitConverter.ToUInt64(hashBytes, 0);
     }
 
     private void EncodeGolomb()
@@ -248,7 +249,7 @@ public class HashTableGolombFilter : IBlacklistFilter
             ulong value = 0;
             for (int i = 0; i < numBits; i++)
             {
-                value = (value << 1) | (ulong)ReadBit();
+                value = (value << 1) | (uint)ReadBit();
             }
             return value;
         }
