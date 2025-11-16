@@ -21,8 +21,8 @@ public class BlacklistService
         _actualBlacklist = new HashSet<string>();
         _currentTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-        // Start generating deltas every second
-        _deltaGeneratorTimer = new Timer(GenerateDelta, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+        // Initialize timer but don't start it yet (Timeout.Infinite)
+        _deltaGeneratorTimer = new Timer(GenerateDelta, null, Timeout.Infinite, Timeout.Infinite);
     }
 
     public void InitializeWithData(int count = 1_000_000)
@@ -47,6 +47,10 @@ public class BlacklistService
             var elapsed = DateTime.UtcNow - startTime;
             Console.WriteLine($"Initialization complete in {elapsed.TotalSeconds:F2} seconds");
             Console.WriteLine($"Filter size: {_filter.Count:N0} items");
+
+            // Start generating deltas after initialization
+            _deltaGeneratorTimer.Change(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+            Console.WriteLine("Delta generation started (1 delta/second)");
         }
     }
 
