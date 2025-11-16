@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  # API with Cuckoo Filter
+  api-cuckoo:
+    build:
+      context: .
+      dockerfile: src/EMVBlacklist.API/Dockerfile
+    container_name: emv-api-cuckoo
+    environment:
+      - FILTER_TYPE=CuckooFilter
+      - INITIAL_COUNT=1000000
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5001:8080"
+    networks:
+      - emv-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/blacklist/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API with Quotient Filter
+  api-quotient:
+    build:
+      context: .
+      dockerfile: src/EMVBlacklist.API/Dockerfile
+    container_name: emv-api-quotient
+    environment:
+      - FILTER_TYPE=QuotientFilter
+      - INITIAL_COUNT=1000000
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5002:8080"
+    networks:
+      - emv-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/blacklist/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API with HashTable + Golomb Filter
+  api-golomb:
+    build:
+      context: .
+      dockerfile: src/EMVBlacklist.API/Dockerfile
+    container_name: emv-api-golomb
+    environment:
+      - FILTER_TYPE=HashTableGolomb
+      - INITIAL_COUNT=1000000
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5003:8080"
+    networks:
+      - emv-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/blacklist/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Client for Cuckoo Filter
+  client-cuckoo:
+    build:
+      context: .
+      dockerfile: src/EMVBlacklist.Client/Dockerfile
+    container_name: emv-client-cuckoo
+    environment:
+      - API_URL=http://api-cuckoo:8080
+      - FILTER_TYPE=CuckooFilter
+    depends_on:
+      api-cuckoo:
+        condition: service_healthy
+    networks:
+      - emv-network
+    restart: on-failure
+
+  # Client for Quotient Filter
+  client-quotient:
+    build:
+      context: .
+      dockerfile: src/EMVBlacklist.Client/Dockerfile
+    container_name: emv-client-quotient
+    environment:
+      - API_URL=http://api-quotient:8080
+      - FILTER_TYPE=QuotientFilter
+    depends_on:
+      api-quotient:
+        condition: service_healthy
+    networks:
+      - emv-network
+    restart: on-failure
+
+  # Client for HashTable + Golomb Filter
+  client-golomb:
+    build:
+      context: .
+      dockerfile: src/EMVBlacklist.Client/Dockerfile
+    container_name: emv-client-golomb
+    environment:
+      - API_URL=http://api-golomb:8080
+      - FILTER_TYPE=HashTableGolomb
+    depends_on:
+      api-golomb:
+        condition: service_healthy
+    networks:
+      - emv-network
+    restart: on-failure
+
+networks:
+  emv-network:
+    driver: bridge
